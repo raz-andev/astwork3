@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
-public class UserRepositoryTest {
+public class TestContainers {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13")
@@ -45,5 +45,4 @@ public class UserRepositoryTest {
         assertEquals(30, found.getAge());
         assertEquals("test@test.com", found.getEmail());
     }
-
 }

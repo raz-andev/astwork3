@@ -3,16 +3,14 @@ package Ast.homework.controllers;
 import Ast.homework.dto.UserDTO;
 import Ast.homework.services.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @Slf4j
@@ -29,7 +27,7 @@ public class UserController {
 
     @GetMapping("/all-users")
     public ResponseEntity<List<UserDTO>> getUsers() {
-        List<UserDTO> users = userService.getAll();
+        List<UserDTO> users = userService.getAllUsers();
         return users != null && !users.isEmpty()
                 ? ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -41,7 +39,7 @@ public class UserController {
     public ResponseEntity<UserDTO> getUser(@PathVariable @Min(0) int id) {
         UserDTO dto = userService.findById(id);
         if (dto == null) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -52,12 +50,12 @@ public class UserController {
     public ResponseEntity<UserDTO> createUser(@RequestBody @Valid UserDTO userDTO) {
         UserDTO savedUser = userService.save(userDTO);
 
-        return ResponseEntity.ok()
+        return ResponseEntity.created(URI.create("api/v1/user-service/" + userDTO.getName()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(savedUser);
     }
 
-    @PatchMapping("/update-user/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Integer id,
                                               @RequestBody @Valid UserDTO userDTO) {
 

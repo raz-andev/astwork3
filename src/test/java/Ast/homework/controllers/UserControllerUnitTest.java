@@ -2,8 +2,6 @@ package Ast.homework.controllers;
 
 import Ast.homework.dto.UserDTO;
 import Ast.homework.services.UserService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
@@ -20,17 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 class UserControllerUnitTest {
 
     @MockitoBean
     private UserService userService;
-
-    private MockMvc mockMvc;
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private UserController userController;
@@ -40,7 +32,7 @@ class UserControllerUnitTest {
         var users = List.of(new UserDTO("test","test@test.com",25),
                 new UserDTO("test2","test2@test.com",25));
 
-        when(userService.getAll()).thenReturn(users);
+        when(userService.getAllUsers()).thenReturn(users);
 
         ResponseEntity<List<UserDTO>> responseEntity = userController.getUsers();
 
@@ -49,42 +41,25 @@ class UserControllerUnitTest {
         assertEquals(MediaType.APPLICATION_JSON, responseEntity.getHeaders().getContentType());
         assertEquals(users, responseEntity.getBody());
 
-        verify(userService, times(1)).getAll();
+        verify(userService, times(1)).getAllUsers();
 
     }
 
     @Test
     void getAllUsers_ReturnsNotFoundWhenNoUsers() {
-        when(userService.getAll())
+        when(userService.getAllUsers())
                 .thenThrow(new EntityNotFoundException("No users found in database!"));
 
         assertThrows(EntityNotFoundException.class, () -> {
             userController.getUsers();
         });
 
-        verify(userService, times(1)).getAll();
+        verify(userService, times(1)).getAllUsers();
     }
 
-    @Test
-    void getAllUsers_ReturnsValidUserDTOs() {
-        var users = List.of(
-                new UserDTO("valid", "valid@test.com", 30),
-                new UserDTO("valid2", "valid2@test.com", 35)
-        );
-
-        when(userService.getAll()).thenReturn(users);
-
-        ResponseEntity<List<UserDTO>> response = userController.getUsers();
-        List<UserDTO> responseUsers = response.getBody();
-
-        assertEquals(2, responseUsers.size());
-        assertEquals("valid", responseUsers.get(0).getName());
-        assertEquals("valid2@test.com", responseUsers.get(1).getEmail());
-        assertEquals(35, responseUsers.get(1).getAge());
-    }
     @Test
     void getAllUsers_HandlesNullFromService() {
-        when(userService.getAll()).thenReturn(null);
+        when(userService.getAllUsers()).thenReturn(null);
 
         ResponseEntity<List<UserDTO>> response = userController.getUsers();
 

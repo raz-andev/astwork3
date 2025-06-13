@@ -5,8 +5,6 @@ import Ast.homework.mappers.UserMapper;
 import Ast.homework.models.User;
 import Ast.homework.repositories.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
-import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,11 +27,10 @@ public class UserService {
         this.userMapper = userMapper;
     }
 
-    public List<UserDTO> getAll() {
+    public List<UserDTO> getAllUsers() {
         log.info("Run finding all users method");
         List<User> users = userRepository.findAll();
         if (users.isEmpty()) {
-            log.warn("No users found in database!");
             throw new EntityNotFoundException("No users found in database!");
         }
 
@@ -48,14 +45,12 @@ public class UserService {
 
         return userRepository.findById(id).
                 map(userMapper::toDTO).
-                orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+                orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Transactional
     public UserDTO save(UserDTO dto) {
         log.info("Run saving user method");
-
-
 
         return userMapper.toDTO(userRepository.save(userMapper.toEntity(dto)));
 
@@ -64,14 +59,17 @@ public class UserService {
     @Transactional
     public void delete(int id) {
         log.info("Run deleting user method");
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        userRepository.deleteById(user.getId());
     }
 
     @Transactional
     public UserDTO update(Integer id, UserDTO userDto) {
         log.info("Run updating user method");
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         if (userDto.getName() != null) {
             existingUser.setName(userDto.getName());
