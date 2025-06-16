@@ -84,7 +84,7 @@ class UserControllerUnitTest {
 
         ResponseEntity<UserDTO> response = userController.getUser(99);
 
-        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
         verify(userService, times(1)).findById(99);
     }
@@ -112,7 +112,7 @@ class UserControllerUnitTest {
 
         ResponseEntity<UserDTO> response = userController.createUser(inputUser);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(savedUser, response.getBody());
         assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
         verify(userService, times(1)).save(inputUser);
