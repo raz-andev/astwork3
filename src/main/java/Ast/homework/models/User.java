@@ -29,6 +29,7 @@ public class User implements Serializable {
     @Column(name = "name")
     @NotEmpty(message = "Поле name не должно быть пустое!")
     @NotBlank
+    @Pattern(regexp = "^[a-zA-Zа-яА-Я\\s\\-]+$", message = "Name should contain only letters")
     private String name;
 
     @Column(name = "email")
