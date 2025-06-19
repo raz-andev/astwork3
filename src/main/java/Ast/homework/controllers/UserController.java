@@ -1,6 +1,8 @@
 package Ast.homework.controllers;
 
 import Ast.homework.dto.UserDTO;
+import Ast.homework.dto.UserEvent;
+import Ast.homework.services.UserEventProducer;
 import Ast.homework.services.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -19,10 +21,12 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserEventProducer userEventProducer;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserEventProducer userEventProducer) {
         this.userService = userService;
+        this.userEventProducer = userEventProducer;
     }
 
     @GetMapping("/all-users")

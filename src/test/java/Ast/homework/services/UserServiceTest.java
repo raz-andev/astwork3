@@ -21,6 +21,9 @@ public class UserServiceTest {
     @MockitoBean
     private UserRepository userRepository;
 
+    @MockitoBean
+    private UserEventProducer userEventProducer;
+
     @Autowired
     private UserService userService;
 
@@ -82,6 +85,10 @@ public class UserServiceTest {
         assertEquals(VALID_USER_DTO.getAge(), dto.getAge());
 
         verify(userRepository,times(1)).save(VALID_USER);
+        verify(userEventProducer).publishUserEvent(
+                eq("CREATED"),
+                eq(VALID_USER.getEmail())
+        );
     }
 
     @Test
@@ -112,6 +119,10 @@ public class UserServiceTest {
         userService.delete(VALID_USER_ID);
 
         verify(userRepository,times(1)).findById(VALID_USER_ID);
+        verify(userEventProducer).publishUserEvent(
+                eq("DELETED"),
+                eq(VALID_USER.getEmail())
+        );
     }
 
     @Test
