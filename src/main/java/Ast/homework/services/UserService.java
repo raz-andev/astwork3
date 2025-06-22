@@ -1,6 +1,7 @@
 package Ast.homework.services;
 
 import Ast.homework.dto.UserDTO;
+import Ast.homework.dto.UserEvent;
 import Ast.homework.mappers.UserMapper;
 import Ast.homework.models.User;
 import Ast.homework.repositories.UserRepository;
@@ -20,11 +21,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserEventProducer userEventProducer;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, UserEventProducer userEventProducer) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.userEventProducer = userEventProducer;
     }
 
     public List<UserDTO> getAllUsers() {
@@ -51,6 +54,7 @@ public class UserService {
     @Transactional
     public UserDTO save(UserDTO dto) {
         log.info("Run saving user method");
+        userEventProducer.sendMessage(new UserEvent("CREATED", dto.getEmail()));
 
         return userMapper.toDTO(userRepository.save(userMapper.toEntity(dto)));
 
@@ -61,6 +65,7 @@ public class UserService {
         log.info("Run deleting user method");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        userEventProducer.sendMessage(new UserEvent("DELETED", user.getEmail()));
 
         userRepository.deleteById(user.getId());
     }
