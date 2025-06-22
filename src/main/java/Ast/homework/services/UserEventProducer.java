@@ -6,10 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-@Slf4j
 @Service
+@Slf4j
 public class UserEventProducer {
-    private static final String TOPIC = "user-events";
 
     private final KafkaTemplate<String, UserEvent> kafkaTemplate;
 
@@ -18,10 +17,8 @@ public class UserEventProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void publishUserEvent(String eventType, String email) {
-        UserEvent event = new UserEvent(eventType, email);
-        log.info("Publishing user event {}", event);
-        kafkaTemplate.send(TOPIC, event);
-        log.info("Отправка email-уведомления в Kafka: {}", event);
+    public void sendMessage(UserEvent event) {
+        log.info("Sending user event: {} " , event);
+        kafkaTemplate.send("user-events", event);
     }
 }

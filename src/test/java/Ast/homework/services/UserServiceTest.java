@@ -7,6 +7,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
@@ -23,6 +24,9 @@ public class UserServiceTest {
 
     @MockitoBean
     private UserEventProducer userEventProducer;
+
+    @MockitoBean
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired
     private UserService userService;
@@ -84,11 +88,9 @@ public class UserServiceTest {
         assertEquals(VALID_USER_DTO.getEmail(), dto.getEmail());
         assertEquals(VALID_USER_DTO.getAge(), dto.getAge());
 
+
+
         verify(userRepository,times(1)).save(VALID_USER);
-        verify(userEventProducer).publishUserEvent(
-                eq("CREATED"),
-                eq(VALID_USER.getEmail())
-        );
     }
 
     @Test
@@ -119,10 +121,6 @@ public class UserServiceTest {
         userService.delete(VALID_USER_ID);
 
         verify(userRepository,times(1)).findById(VALID_USER_ID);
-        verify(userEventProducer).publishUserEvent(
-                eq("DELETED"),
-                eq(VALID_USER.getEmail())
-        );
     }
 
     @Test

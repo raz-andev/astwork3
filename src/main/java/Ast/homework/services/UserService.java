@@ -24,9 +24,7 @@ public class UserService {
     private final UserEventProducer userEventProducer;
 
     @Autowired
-    public UserService(UserRepository userRepository,
-                       UserMapper userMapper,
-                       UserEventProducer userEventProducer) {
+    public UserService(UserRepository userRepository, UserMapper userMapper, UserEventProducer userEventProducer) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.userEventProducer = userEventProducer;
@@ -56,11 +54,9 @@ public class UserService {
     @Transactional
     public UserDTO save(UserDTO dto) {
         log.info("Run saving user method");
-        User savedUser = userRepository.save(userMapper.toEntity(dto));
+        userEventProducer.sendMessage(new UserEvent("CREATED", dto.getEmail()));
 
-        userEventProducer.publishUserEvent("CREATED", savedUser.getEmail());
-
-        return userMapper.toDTO(savedUser);
+        return userMapper.toDTO(userRepository.save(userMapper.toEntity(dto)));
 
     }
 
@@ -69,8 +65,7 @@ public class UserService {
         log.info("Run deleting user method");
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        userEventProducer.publishUserEvent("DELETED", user.getEmail());
+        userEventProducer.sendMessage(new UserEvent("DELETED", user.getEmail()));
 
         userRepository.deleteById(user.getId());
     }
