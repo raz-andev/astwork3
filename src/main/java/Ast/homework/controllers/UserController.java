@@ -4,6 +4,12 @@ import Ast.homework.dto.UserDTO;
 import Ast.homework.dto.UserEvent;
 import Ast.homework.services.UserEventProducer;
 import Ast.homework.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +27,19 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserEventProducer userEventProducer;
 
     @Autowired
-    public UserController(UserService userService, UserEventProducer userEventProducer) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.userEventProducer = userEventProducer;
+
     }
 
+    @Operation(summary = "Получить список всех пользователей")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователи найдены",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "204", description = "Список пуст", content = @Content)
+    })
     @GetMapping("/all-users")
     public ResponseEntity<List<UserDTO>> getUsers() {
         List<UserDTO> users = userService.getAllUsers();
@@ -39,8 +50,17 @@ public class UserController {
                 ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Получить пользователя по ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь найден",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден", content = @Content)
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable @Min(0) int id) {
+    public ResponseEntity<UserDTO> getUser(
+            @Parameter(description = "ID пользователя",example = "1")
+            @PathVariable @Min(0) int id)
+    {
         UserDTO dto = userService.findById(id);
         if (dto == null) {
             return ResponseEntity.notFound().build();
@@ -50,8 +70,18 @@ public class UserController {
                 .body(dto);
     }
 
+    @Operation(summary = "Создать нового пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Пользователь создан",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Неверный формат данных", content = @Content)
+    })
     @PostMapping("/add-user")
-    public ResponseEntity<UserDTO> createUser(@RequestBody @Valid UserDTO userDTO) {
+    public ResponseEntity<UserDTO> createUser(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+                    description = "Данные нового пользователя",
+                    content = @Content(schema = @Schema(implementation = UserDTO.class)))
+            @RequestBody @Valid UserDTO userDTO) {
         UserDTO savedUser = userService.save(userDTO);
 
         return ResponseEntity.created(URI.create("api/v1/user-service/" + userDTO.getName()))
@@ -59,6 +89,13 @@ public class UserController {
                 .body(savedUser);
     }
 
+    @Operation(summary = "Обновить пользователя по ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь обновлён",
+                    content = @Content(schema = @Schema(implementation = UserDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Неверный запрос", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден", content = @Content)
+    })
     @PatchMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Integer id,
                                               @RequestBody @Valid UserDTO userDTO) {
@@ -67,6 +104,11 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @Operation(summary = "Удалить пользователя по ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь удалён", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден", content = @Content)
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<UserDTO> deleteUser(@PathVariable int id) {
         userService.delete(id);
