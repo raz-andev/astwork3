@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.io.Serializable;
 
@@ -16,6 +17,9 @@ import java.io.Serializable;
 @ToString
 @Schema(description = "DTO пользователя")
 public class UserDTO implements Serializable {
+
+    @Schema(description = "ID пользователя", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
+    private Integer id;
 
     @NotEmpty(message = "Поле name не должно быть пустое!")
     @NotBlank
@@ -30,6 +34,12 @@ public class UserDTO implements Serializable {
     @Min(value = 1,message = "Возраст должен быть положительным!")
     @Schema(description = "Возраст пользователя", example = "25", minimum = "1")
     private int age;
+
+    public UserDTO(String name, String email, int age) {
+        this.name = name;
+        this.email = email;
+        this.age = age;
+    }
 
 
 }

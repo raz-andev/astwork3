@@ -2,6 +2,8 @@ package Ast.homework.controllers;
 
 import Ast.homework.dto.UserDTO;
 import Ast.homework.dto.UserEvent;
+import Ast.homework.mappers.UserModelAssembler;
+import Ast.homework.models.UserModel;
 import Ast.homework.services.UserEventProducer;
 import Ast.homework.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +16,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,17 +24,21 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @Slf4j
 @RestController
 @RequestMapping("api/v1/user-service")
 public class UserController {
 
     private final UserService userService;
+    private final UserModelAssembler userModelAssembler;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserModelAssembler userModelAssembler) {
         this.userService = userService;
-
+        this.userModelAssembler = userModelAssembler;
     }
 
     @Operation(summary = "Получить список всех пользователей")
@@ -41,13 +48,22 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "Список пуст", content = @Content)
     })
     @GetMapping("/all-users")
-    public ResponseEntity<List<UserDTO>> getUsers() {
+    public ResponseEntity<CollectionModel<UserModel>> getUsers() {
         List<UserDTO> users = userService.getAllUsers();
-        return users != null && !users.isEmpty()
-                ? ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(users) :
-                ResponseEntity.noContent().build();
+
+        List<UserModel> models = users.stream()
+                .map(userModelAssembler::toModel)
+                .toList();
+
+        return ResponseEntity.ok(
+                CollectionModel.of(models,
+                        linkTo(methodOn(UserController.class).getUsers()).withSelfRel())
+        );
+//        return  !users.isEmpty()
+//                ? ResponseEntity.ok()
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(users) :
+//                ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Получить пользователя по ID")
@@ -65,6 +81,7 @@ public class UserController {
         if (dto == null) {
             return ResponseEntity.notFound().build();
         }
+
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(dto);
