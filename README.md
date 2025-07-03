@@ -40,3 +40,9 @@ docker compose up
 
 ### Swagger UI
 ### http://localhost:8080/swagger-ui/index.html#/user-controller/updateUser
+
+### Spring Eureka
+### http://localhost:8761/
+
+### Config-server
+### http://localhost:8888/user-service/default

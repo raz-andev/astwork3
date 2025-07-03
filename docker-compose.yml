@@ -96,6 +96,18 @@ services:
     networks:
       - backend
 
+  config-server:
+    build:
+      context: ../config-server
+      dockerfile: docker/Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./config/cloud:/config-repo
+    networks:
+      - backend
+
 networks:
   backend:
 
